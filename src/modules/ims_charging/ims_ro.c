@@ -1555,6 +1555,21 @@ error:
 	return RO_RETURN_ERROR;
 }
 
+/* resume the suspended transaction in the cfg route or the KEMI callback,
+ * then free the session setup data */
+static void ro_t_continue(struct session_setup_data *ssd)
+{
+	if(sr_kemi_eng_get()) {
+		str cb_param = str_init("ccr:continue");
+		tmb.t_continue_cb(ssd->tindex, ssd->tlabel, ssd->action, &cb_param);
+		ims_str_free(*((str *)ssd->action), shm);
+		shm_free(ssd->action);
+	} else {
+		tmb.t_continue(ssd->tindex, ssd->tlabel, ssd->action);
+	}
+	shm_free(ssd);
+}
+
 static void resume_on_initial_ccr(
 		int is_timeout, void *param, AAAMessage *cca, long elapsed_msecs)
 {
@@ -1738,16 +1753,7 @@ static void resume_on_initial_ccr(
 	if(t)
 		tmb.unref_cell(t);
 
-	if(sr_kemi_eng_get()) {
-		str cb_param = str_init("ccr:continue");
-		tmb.t_continue_cb(ssd->tindex, ssd->tlabel, ssd->action, &cb_param);
-		ims_str_free(*((str *)ssd->action), shm);
-		shm_free(ssd->action);
-	} else {
-		tmb.t_continue(ssd->tindex, ssd->tlabel, ssd->action);
-	}
-
-	shm_free(ssd);
+	ro_t_continue(ssd);
 
 	counter_inc(ims_charging_cnts_h.successful_initial_ccrs);
 
@@ -1774,8 +1780,9 @@ error0:
 	if(t)
 		tmb.unref_cell(t);
 
-	tmb.t_continue(ssd->tindex, ssd->tlabel, ssd->action);
-	shm_free(ssd);
+	if(ssd) {
+		ro_t_continue(ssd);
+	}
 }
 
 void remove_aaa_session(str *session_id)
