@@ -678,6 +678,7 @@ modparam("ims_qos", "af_signaling_port_ps", "5063")
       <itemizedlist>
         <listitem>
           <para>Route block to resume after async AAA Diameter reply.</para>
+          <para>When using KEMI, it is the name of the script function to execute, which gets <emphasis>aar:continue</emphasis> as parameter.</para>
         </listitem>
 
         <listitem>
@@ -748,6 +749,7 @@ route[REGISTER_AAR_REPLY]
       <itemizedlist>
         <listitem>
           <para><emphasis>Route block</emphasis> to resume after async AAR Diameter reply.</para>
+          <para>When using KEMI, it is the name of the script function to execute, which gets <emphasis>aar:continue</emphasis> as parameter.</para>
         </listitem>
 
         <listitem>

@@ -256,7 +256,7 @@ done:
 		cdpb.AAAFreeMessage(&aaa);
 
 	if(_ims_qos_suspend_transaction) {
-		tmb.t_continue(data->tindex, data->tlabel, data->act);
+		rx_t_continue(data);
 	}
 	free_saved_transaction_global_data(data);
 }
@@ -485,7 +485,7 @@ done:
 
 	if(finalReply) {
 		if(_ims_qos_suspend_transaction) {
-			tmb.t_continue(data->tindex, data->tlabel, data->act);
+			rx_t_continue(data);
 		}
 		free_saved_transaction_global_data(data);
 	}
@@ -1269,10 +1269,26 @@ enum dialog_direction get_dialog_direction(char *direction)
 	}
 }
 
+/* resume the suspended transaction in the cfg route or the KEMI callback */
+void rx_t_continue(saved_transaction_t *data)
+{
+	str cbparam = str_init("aar:continue");
+
+	if(data->cbname.s != NULL && data->cbname.len > 0) {
+		tmb.t_continue_cb(data->tindex, data->tlabel, &data->cbname, &cbparam);
+	} else {
+		tmb.t_continue(data->tindex, data->tlabel, data->act);
+	}
+}
+
 void free_saved_transaction_global_data(saved_transaction_t *data)
 {
 	if(!data)
 		return;
+	if(data->cbname.s) {
+		shm_free(data->cbname.s);
+		data->cbname.len = 0;
+	}
 	if(data->callid.s && data->callid.len) {
 		shm_free(data->callid.s);
 		data->callid.len = 0;
