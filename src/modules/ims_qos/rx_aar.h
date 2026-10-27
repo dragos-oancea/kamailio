@@ -71,6 +71,7 @@ typedef struct saved_transaction
 	unsigned int tlabel;
 	unsigned int ticks;
 	cfg_action_t *act;
+	str cbname; /* KEMI callback name (shm) */
 	udomain_t *domain;
 	str callid;
 	str ftag;
@@ -109,6 +110,7 @@ struct rx_authdata;
 
 void free_saved_transaction_data(saved_transaction_local_t *data);
 void free_saved_transaction_global_data(saved_transaction_t *data);
+void rx_t_continue(saved_transaction_t *data);
 
 //AAAMessage *rx_send_aar(struct sip_msg *req, struct sip_msg *res, AAASession* auth, str *callid, str *ftag, str *ttag, char *direction, rx_authsessiondata_t **rx_authdata);
 int rx_send_aar(struct sip_msg *req, struct sip_msg *res, AAASession *auth,

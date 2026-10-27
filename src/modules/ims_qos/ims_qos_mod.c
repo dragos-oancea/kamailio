@@ -817,18 +817,22 @@ static int w_rx_aar(struct sip_msg *msg, char *route, char *dir, char *c_id,
 		s_id.len = strlen(c_id);
 	}
 
-	LM_DBG("Looking for route block [%.*s]\n", route_name.len, route_name.s);
-	int ri = route_get(&main_rt, route_name.s);
-	if(ri < 0) {
-		LM_ERR("unable to find route block [%.*s]\n", route_name.len,
+	// KEMI resumes in the callback function named by route_name
+	if(cfg_type == 0) {
+		LM_DBG("Looking for route block [%.*s]\n", route_name.len,
 				route_name.s);
-		return result;
-	}
-	cfg_action = main_rt.rlist[ri];
-	if(cfg_action == NULL) {
-		LM_ERR("empty action lists in route block [%.*s]\n", route_name.len,
-				route_name.s);
-		return result;
+		int ri = route_lookup(&main_rt, route_name.s);
+		if(ri < 0) {
+			LM_ERR("unable to find route block [%.*s]\n", route_name.len,
+					route_name.s);
+			return result;
+		}
+		cfg_action = main_rt.rlist[ri];
+		if(cfg_action == NULL) {
+			LM_ERR("empty action lists in route block [%.*s]\n", route_name.len,
+					route_name.s);
+			return result;
+		}
 	}
 
 	LM_DBG("Rx AAR called\n");
@@ -958,6 +962,11 @@ static int w_rx_aar(struct sip_msg *msg, char *route, char *dir, char *c_id,
 	}
 	memset(saved_t_data, 0, sizeof(saved_transaction_t));
 	saved_t_data->act = cfg_action;
+	if(cfg_type != 0 && shm_str_dup(&saved_t_data->cbname, &route_name) != 0) {
+		LM_ERR("failed to save KEMI callback name\n");
+		free_saved_transaction_global_data(saved_t_data);
+		return CSCF_RETURN_ERROR;
+	}
 	//OTHER parms need after async response set here
 	//store call id
 	saved_t_data->callid.s = (char *)shm_malloc(callid.len + 1);
@@ -1387,18 +1396,22 @@ static int w_rx_aar_register(
 		str1 = (char *)d;
 	}
 
-	LM_DBG("Looking for route block [%.*s]\n", route_name.len, route_name.s);
-	int ri = route_get(&main_rt, route_name.s);
-	if(ri < 0) {
-		LM_ERR("unable to find route block [%.*s]\n", route_name.len,
+	// KEMI resumes in the callback function named by route_name
+	if(cfg_type == 0) {
+		LM_DBG("Looking for route block [%.*s]\n", route_name.len,
 				route_name.s);
-		return -1;
-	}
-	cfg_action = main_rt.rlist[ri];
-	if(cfg_action == NULL) {
-		LM_ERR("empty action lists in route block [%.*s]\n", route_name.len,
-				route_name.s);
-		return -1;
+		int ri = route_lookup(&main_rt, route_name.s);
+		if(ri < 0) {
+			LM_ERR("unable to find route block [%.*s]\n", route_name.len,
+					route_name.s);
+			return -1;
+		}
+		cfg_action = main_rt.rlist[ri];
+		if(cfg_action == NULL) {
+			LM_ERR("empty action lists in route block [%.*s]\n", route_name.len,
+					route_name.s);
+			return -1;
+		}
 	}
 
 	udomain_t *domain_t = (udomain_t *)str1;
@@ -1477,6 +1490,11 @@ static int w_rx_aar_register(
 	}
 	memset(saved_t_data, 0, sizeof(saved_transaction_t));
 	saved_t_data->act = cfg_action;
+	if(cfg_type != 0 && shm_str_dup(&saved_t_data->cbname, &route_name) != 0) {
+		LM_ERR("failed to save KEMI callback name\n");
+		free_saved_transaction_global_data(saved_t_data);
+		return CSCF_RETURN_ERROR;
+	}
 	saved_t_data->domain = domain_t;
 	saved_t_data->lock = lock_alloc();
 	if(saved_t_data->lock == NULL) {

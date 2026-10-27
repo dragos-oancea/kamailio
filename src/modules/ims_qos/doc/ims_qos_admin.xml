@@ -640,6 +640,7 @@ modparam("ims_qos", "trust_bottom_via", 1)
       <itemizedlist>
         <listitem>
           <para>Route block to resume after async UAR Diameter reply.</para>
+          <para>When using KEMI, it is the name of the script function to execute, which gets <emphasis>aar:continue</emphasis> as parameter.</para>
         </listitem>
 
         <listitem>
@@ -707,6 +708,7 @@ route[REG_AAR_REPLY]
       <itemizedlist>
         <listitem>
           <para><emphasis>Route block</emphasis> to resume after async UAR Diameter reply.</para>
+          <para>When using KEMI, it is the name of the script function to execute, which gets <emphasis>aar:continue</emphasis> as parameter.</para>
         </listitem>
 
         <listitem>
